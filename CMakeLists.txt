@@ -111,17 +111,16 @@ else()
 
 endif()
 
-
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #  	CDEFS
 #
 if( WIN32 )
-    set( CDEFS_DEBUG            "/DHAVE_PLATFORM_H /DDEBUG" )
-    set( CDEFS_RELEASE          "/DHAVE_PLATFORM_H /DNDEBUG" )
+    set( CDEFS_DEBUG            "/D HAVE_PLATFORM_H /D DEBUG" )
+    set( CDEFS_RELEASE          "/D HAVE_PLATFORM_H /D NDEBUG" )
 
 else()
-    set( CDEFS_DEBUG            "-DHAVE_PLATFORM_H -DDEBUG" )
-    set( CDEFS_RELEASE          "-DHAVE_PLATFORM_H -DNDEBUG" )
+    set( CDEFS_DEBUG            "-D HAVE_PLATFORM_H -D DEBUG" )
+    set( CDEFS_RELEASE          "-D HAVE_PLATFORM_H -D NDEBUG" )
 
 endif()
 
@@ -150,6 +149,38 @@ include_directories(    BEFORE
                     )
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   the public headers
+#
+file( GLOB public_headers
+        RELATIVE "${CMAKE_SOURCE_DIR}" "include/*.h" )
+Trace( "public_headers" )
+
+set(    public_headers
+        include/decimal128.h
+        include/decimal32.h
+        include/decimal64.h
+        include/decPacked.h
+        )
+Trace( "public_headers" )
+list( SORT public_headers )
+Trace( "public_headers" )
+
+# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   the private headers
+#
+file( GLOB private_headers
+        RELATIVE "${CMAKE_SOURCE_DIR}" "include/*.h" )
+Trace( "private_headers" )
+
+list( SORT private_headers )
+Trace( "private_headers" )
+
+foreach( _h IN LISTS public_headers )
+    list( REMOVE_ITEM private_headers ${_h} )
+endforeach()
+Trace( "private_headers" )
+
+# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   generate the <Makefiles>
 #
 
@@ -168,12 +199,24 @@ set(    decNumber_SRCS
     )
 
 add_library( decNumber        STATIC ${decNumber_SRCS} )
-add_library( decNumber_shared SHARED ${decNumber_SRCS} )
+set_target_properties(  decNumber PROPERTIES
+						PUBLIC_HEADER "${public_headers}" )
+install( TARGETS decNumber
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include)
 
+
+if( SHARED_LIBRARY )
+add_library( decNumber_shared SHARED ${decNumber_SRCS} )
 set_target_properties(  decNumber_shared PROPERTIES
 						OUTPUT_NAME decNumber )
 
-install( TARGETS decNumber decNumber_shared DESTINATION lib )
+install( TARGETS decNumber_shared
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include)
+endif()
 
 get_filename_component( CURRENT_LIST_FILE "${CMAKE_CURRENT_LIST_FILE}" NAME)
 Vdump( "${CURRENT_LIST_FILE}" "${CMAKE_CURRENT_LIST_LINE}" )
