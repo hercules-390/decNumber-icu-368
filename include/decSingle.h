@@ -24,6 +24,10 @@
   #define DECSINGLETITLE      "Decimal 32-bit datum"  /* Verbose name */
   #define DECSINGLEAUTHOR     "Mike Cowlishaw"        /* Who to blame */
 
+  #ifdef HAVE_PLATFORM_H
+    #include "platform.h"
+  #endif
+
   /* parameters for decSingles */
   #define DECSINGLE_Bytes    4     /* length                          */
   #define DECSINGLE_Pmax     7     /* maximum precision (digits)      */

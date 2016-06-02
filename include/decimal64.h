@@ -23,6 +23,9 @@
   #define DEC64FULLNAME "Decimal 64-bit Number"       /* Verbose name */
   #define DEC64AUTHOR   "Mike Cowlishaw"              /* Who to blame */
 
+  #ifdef HAVE_PLATFORM_H
+    #include "platform.h"
+  #endif
 
   /* parameters for decimal64s                                        */
   #define DECIMAL64_Bytes  8            /* length                     */

@@ -18,7 +18,9 @@
 /* ------------------------------------------------------------------ */
 /* This module comprises decQuad operations (including conversions)   */
 /* ------------------------------------------------------------------ */
-
+#ifdef HAVE_PLATFORM_H
+#include "platform.h"
+#endif
 
 /* Constant mappings for shared code */
 #define DECPMAX     DECQUAD_Pmax
@@ -130,6 +132,6 @@
 #include "decContext.h"       // public includes
 #include "decQuad.h"          // ..
 #include "decNumberLocal.h"   // local includes (need DECPMAX)
-#include "decCommon.c"        // non-arithmetic decFloat routines
-#include "decBasic.c"         // basic formats routines
+#include "decCommon.h"        // non-arithmetic decFloat routines
+#include "decBasic.h"         // basic formats routines
 

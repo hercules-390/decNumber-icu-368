@@ -1,5 +1,8 @@
+#if !defined(DECCOMMON)
+#define DECCOMMON
+
 /* ------------------------------------------------------------------ */
-/* decCommon.c -- common code for all three fixed-size types          */
+/* decCommon.h -- common code for all three fixed-size types          */
 /* ------------------------------------------------------------------ */
 /* Copyright (c) IBM Corporation, 2000, 2010.  All rights reserved.   */
 /*                                                                    */
@@ -82,7 +85,7 @@
   // Note: code for up to 9 digits exists in archives [decOct]
 #endif
 
-/* Private functions used here and possibly in decBasic.c, etc. */
+/* Private functions used here and possibly in decBasic.h, etc. */
 static decFloat * decFinalize(decFloat *, bcdnum *, decContext *);
 static Flag decBiStr(const char *, const char *, const char *);
 
@@ -1833,3 +1836,5 @@ decFloat * decFloatZero(decFloat *df){
     printf("\n");
     } // decShowNum
 #endif
+
+#endif /* !defined(DECCOMMON) */

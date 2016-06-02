@@ -27,6 +27,10 @@
   #define DECVERSION    "decNumber 3.68" /* Package Version [16 max.] */
   #define DECNLAUTHOR   "Mike Cowlishaw"              /* Who to blame */
 
+  #ifdef HAVE_PLATFORM_H
+    #include "platform.h"
+  #endif
+
   #include <stdlib.h>         /* for abs                              */
   #include <string.h>         /* for memset, strcpy                   */
 

@@ -24,6 +24,10 @@
 /*                                                                    */
 /* Error handling is the same as decNumber (qv.).                     */
 /* ------------------------------------------------------------------ */
+#ifdef HAVE_PLATFORM_H
+#include "platform.h"
+#endif
+
 #include <string.h>           // [for memset/memcpy]
 #include <stdio.h>            // [for printf]
 

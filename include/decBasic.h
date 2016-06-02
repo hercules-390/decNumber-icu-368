@@ -1,5 +1,7 @@
+#if !defined(DECBASIC)
+#define DECBASIC
 /* ------------------------------------------------------------------ */
-/* decBasic.c -- common base code for Basic decimal types             */
+/* decBasic.h -- common base code for Basic decimal types             */
 /* ------------------------------------------------------------------ */
 /* Copyright (c) IBM Corporation, 2000, 2010.  All rights reserved.   */
 /*                                                                    */
@@ -26,18 +28,18 @@
 /* code.  The functions here, therefore, are code shared between      */
 /* multiple formats.                                                  */
 /*                                                                    */
-/* This must be included after decCommon.c.                           */
+/* This must be included after decCommon.h.                           */
 /* ------------------------------------------------------------------ */
 // Names here refer to decFloat rather than to decDouble, etc., and
 // the functions are in strict alphabetical order.
 
 // The compile-time flags SINGLE, DOUBLE, and QUAD are set up in
-// decCommon.c
+// decCommon.h
 #if !defined(QUAD)
-  #error decBasic.c must be included after decCommon.c
+  #error decBasic.h must be included after decCommon.h
 #endif
 #if SINGLE
-  #error Routines in decBasic.c are for decDouble and decQuad only
+  #error Routines in decBasic.h are for decDouble and decQuad only
 #endif
 
 /* Private constants */
@@ -2443,7 +2445,7 @@ uInt decFloatIsSignalling(const decFloat *df) {
   return DFISSNAN(df);
   }
 uInt decFloatIsSigned(const decFloat *df) {
-  return DFISSIGNED(df);
+  return DFISSIGNED(df)!=0;
   }
 uInt decFloatIsSubnormal(const decFloat *df) {
   if (DFISSPECIAL(df)) return 0;
@@ -3906,3 +3908,4 @@ static decFloat * decToIntegral(decFloat *result, const decFloat *df,
   if (!exact) set->status=savestatus;   // .. and status, unless exact
   return result;
   } // decToIntegral
+#endif /* !defined(DECBASIC) */

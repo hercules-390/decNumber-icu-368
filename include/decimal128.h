@@ -23,6 +23,10 @@
   #define DEC128FULLNAME "Decimal 128-bit Number"     /* Verbose name */
   #define DEC128AUTHOR   "Mike Cowlishaw"             /* Who to blame */
 
+  #ifdef HAVE_PLATFORM_H
+    #include "platform.h"
+  #endif
+
   /* parameters for decimal128s */
   #define DECIMAL128_Bytes  16          /* length                     */
   #define DECIMAL128_Pmax   34          /* maximum precision (digits) */

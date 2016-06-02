@@ -18,6 +18,9 @@
 /* ------------------------------------------------------------------ */
 /* This module comprises decSingle operations (including conversions) */
 /* ------------------------------------------------------------------ */
+#ifdef HAVE_PLATFORM_H
+#include "platform.h"
+#endif
 
 #include "decContext.h"       // public includes
 #include "decSingle.h"        // public includes
@@ -66,6 +69,6 @@
 #define decFloatVersion            decSingleVersion
 
 #include "decNumberLocal.h"   // local includes (need DECPMAX)
-#include "decCommon.c"        // non-basic decFloat routines
-// [Do not include decBasic.c for decimal32]
+#include "decCommon.h"        // non-basic decFloat routines
+// [Do not include decBasic.h for decimal32]
 

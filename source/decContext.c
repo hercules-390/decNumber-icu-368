@@ -19,6 +19,9 @@
 /* This module comprises the routines for handling arithmetic         */
 /* context structures.                                                */
 /* ------------------------------------------------------------------ */
+#ifdef HAVE_PLATFORM_H
+#include "platform.h"
+#endif
 
 #include <string.h>           // for strcmp
 #include <stdio.h>            // for printf if DECCHECK

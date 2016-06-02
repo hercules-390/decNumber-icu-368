@@ -19,10 +19,13 @@
 
 #if !defined(DECDOUBLE)
   #define DECDOUBLE
-
   #define DECDOUBLENAME       "decimalDouble"         /* Short name   */
   #define DECDOUBLETITLE      "Decimal 64-bit datum"  /* Verbose name */
   #define DECDOUBLEAUTHOR     "Mike Cowlishaw"        /* Who to blame */
+
+  #ifdef HAVE_PLATFORM_H
+    #include "platform.h"
+  #endif
 
   /* parameters for decDoubles */
   #define DECDOUBLE_Bytes   8      /* length                          */

@@ -25,6 +25,9 @@
 /* Conversions from decNumber to and from densely packed decimal      */
 /* formats are provided by the decimal32 through decimal128 modules.  */
 /* ------------------------------------------------------------------ */
+#ifdef HAVE_PLATFORM_H
+#include "platform.h"
+#endif
 
 #include <string.h>           // for NULL
 #include "decNumber.h"        // base number library

@@ -18,6 +18,9 @@
 /* ------------------------------------------------------------------ */
 /* This module comprises decDouble operations (including conversions) */
 /* ------------------------------------------------------------------ */
+#ifdef HAVE_PLATFORM_H
+#include "platform.h"
+#endif
 
 #include "decContext.h"       // public includes
 #include "decDouble.h"        // ..
@@ -135,6 +138,6 @@
 #define decFloatVersion            decDoubleVersion
 
 #include "decNumberLocal.h"   // local includes (need DECPMAX)
-#include "decCommon.c"        // non-arithmetic decFloat routines
-#include "decBasic.c"         // basic formats routines
+#include "decCommon.h"        // non-arithmetic decFloat routines
+#include "decBasic.h"         // basic formats routines
 

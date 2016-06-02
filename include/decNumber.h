@@ -23,6 +23,10 @@
   #define DECFULLNAME "Decimal Number Module"         /* Verbose name */
   #define DECAUTHOR   "Mike Cowlishaw"                /* Who to blame */
 
+  #ifdef HAVE_PLATFORM_H
+    #include "platform.h"
+  #endif
+
   #if !defined(DECCONTEXT)
     #include "decContext.h"
   #endif

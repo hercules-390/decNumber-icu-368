@@ -23,6 +23,10 @@
   #define DECPFULLNAME "Packed Decimal conversions"   /* Verbose name */
   #define DECPAUTHOR   "Mike Cowlishaw"               /* Who to blame */
 
+  #ifdef HAVE_PLATFORM_H
+    #include "platform.h"
+  #endif
+
   #define DECPACKED_DefP 32             /* default precision          */
 
   #ifndef  DECNUMDIGITS

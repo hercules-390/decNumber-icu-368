@@ -21,10 +21,13 @@
 
 #if !defined(DECQUAD)
   #define DECQUAD
-
   #define DECQUADNAME         "decimalQuad"           /* Short name   */
   #define DECQUADTITLE        "Decimal 128-bit datum" /* Verbose name */
   #define DECQUADAUTHOR       "Mike Cowlishaw"        /* Who to blame */
+
+  #ifdef HAVE_PLATFORM_H
+    #include "platform.h"
+  #endif
 
   /* parameters for decQuads */
   #define DECQUAD_Bytes    16      /* length                          */

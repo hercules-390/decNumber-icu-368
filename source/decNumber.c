@@ -161,6 +161,9 @@
 /*      -ve -- negative                                               */
 /*      **  -- raise to the power                                     */
 /* ------------------------------------------------------------------ */
+#ifdef HAVE_PLATFORM_H
+#include "platform.h"
+#endif
 
 #include <stdlib.h>                // for malloc, free, etc.
 #include <stdio.h>                 // for printf [if needed]

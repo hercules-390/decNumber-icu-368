@@ -23,6 +23,10 @@
   #define DEC32FULLNAME "Decimal 32-bit Number"       /* Verbose name */
   #define DEC32AUTHOR   "Mike Cowlishaw"              /* Who to blame */
 
+  #ifdef HAVE_PLATFORM_H
+    #include "platform.h"
+  #endif
+
   /* parameters for decimal32s */
   #define DECIMAL32_Bytes  4            /* length                     */
   #define DECIMAL32_Pmax   7            /* maximum precision (digits) */
