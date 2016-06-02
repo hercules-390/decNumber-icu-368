@@ -84,7 +84,7 @@ set( CMAKE_BUILD_TYPE  "${BUILD_TYPE}" CACHE PATH "" FORCE )
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   define the project
 #
-project( DECNUMBER VERSION 3.6.8 )
+project( decNumber VERSION 3.6.8 )
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #  	revision information
@@ -141,6 +141,33 @@ else()
 endif()
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   decNumber.pc
+#
+if( WIN32 )
+    if(     EXISTS ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in.Windows
+        AND EXISTS $ENV{HOMEPATH}/.pkgconfig )
+	    configure_file( ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in.Windows
+    	                ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY )
+        install(    FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc
+                    DESTINATION $ENV{HOMEPATH}/.pkgconfig)
+    else()
+        message( "++ will not install '${PROJECT_NAME}.pc' " )
+    endif()
+
+else()
+    if(     EXISTS ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in
+        AND EXISTS $ENV{HOME}/.pkgconfig )
+	    configure_file( ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in
+    	                ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY )
+        install(    FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc
+                    DESTINATION $ENV{HOME}/.pkgconfig)
+    else()
+        message( "++ will not install '${PROJECT_NAME}.pc' " )
+    endif()
+
+endif()
+
+# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   include directories
 #
 include_directories(    BEFORE
@@ -153,32 +180,17 @@ include_directories(    BEFORE
 #
 file( GLOB public_headers
         RELATIVE "${CMAKE_SOURCE_DIR}" "include/*.h" )
-Trace( "public_headers" )
 
 set(    public_headers
         include/decimal128.h
         include/decimal32.h
         include/decimal64.h
         include/decPacked.h
+        include/decNumber.h
+        include/decContext.h
+        include/decQuad.h
         )
-Trace( "public_headers" )
 list( SORT public_headers )
-Trace( "public_headers" )
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   the private headers
-#
-file( GLOB private_headers
-        RELATIVE "${CMAKE_SOURCE_DIR}" "include/*.h" )
-Trace( "private_headers" )
-
-list( SORT private_headers )
-Trace( "private_headers" )
-
-foreach( _h IN LISTS public_headers )
-    list( REMOVE_ITEM private_headers ${_h} )
-endforeach()
-Trace( "private_headers" )
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   generate the <Makefiles>
