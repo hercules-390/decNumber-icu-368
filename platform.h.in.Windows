@@ -3,7 +3,7 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 
-#define srtrcpy strcpy_s
+#define _CRT_SECURE_NO_WARNINGS
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 #endif /* #ifndef IN_PLATFORM_H */
