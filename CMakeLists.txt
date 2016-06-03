@@ -104,7 +104,6 @@ endif()
 include( CheckIncludeFile )
 include( CheckHeader )
 check_header( stdint.h )
-check_header( inttypes.h )
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #  	CFLAGS

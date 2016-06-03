@@ -7,7 +7,6 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 #cmakedefine HAVE_STDINT_H
-#cmakedefine HAVE_INTTYPES_H
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
