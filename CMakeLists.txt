@@ -151,25 +151,23 @@ endif()
 #   decNumber.pc
 #
 if( WIN32 )
-    if(     EXISTS ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in.Windows
-        AND EXISTS $ENV{HOMEPATH}/.pkgconfig )
-	    configure_file( ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in.Windows
-    	                ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY )
-        install(    FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc
-                    DESTINATION $ENV{HOMEPATH}/.pkgconfig)
+    if(     EXISTS ${CMAKE_SOURCE_DIR}/decNumber.pc.in.Windows )
+	    configure_file( ${CMAKE_SOURCE_DIR}/decNumber.pc.in.Windows
+    	                ${CMAKE_BINARY_DIR}/decNumber.pc @ONLY )
+        install(    FILES ${CMAKE_BINARY_DIR}/decNumber.pc
+                    DESTINATION lib/pkgconfig )
     else()
-        message( "++ will not install '${PROJECT_NAME}.pc' " )
+        message( "++ will not install 'decNumber.pc' " )
     endif()
 
 else()
-    if(     EXISTS ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in
-        AND EXISTS $ENV{HOME}/.pkgconfig )
-	    configure_file( ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in
-    	                ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY )
-        install(    FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc
-                    DESTINATION $ENV{HOME}/.pkgconfig)
+    if(     EXISTS ${CMAKE_SOURCE_DIR}/decNumber.pc.in )
+	    configure_file( ${CMAKE_SOURCE_DIR}/decNumber.pc.in
+    	                ${CMAKE_BINARY_DIR}/decNumber.pc @ONLY )
+        install(    FILES ${CMAKE_BINARY_DIR}/decNumber.pc
+                    DESTINATION lib/pkgconfig )
     else()
-        message( "++ will not install '${PROJECT_NAME}.pc' " )
+        message( "++ will not install 'decNumber.pc' " )
     endif()
 
 endif()
