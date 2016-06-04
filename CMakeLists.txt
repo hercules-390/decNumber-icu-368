@@ -1,7 +1,7 @@
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Global settings
 #
-cmake_minimum_required( VERSION 3.4 )
+cmake_minimum_required( VERSION 3.2 )
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   check for an in-source build
@@ -38,15 +38,10 @@ Cmake modules directory not found '${CMAKE_SOURCE_DIR}/cmake/modules'
 endif()
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#  	project name, install prefix, and build type
+#  	install prefix, and build type
 #
 get_filename_component( BINARY_HLQ ${CMAKE_BINARY_DIR} DIRECTORY )
 get_filename_component( BINARY_DIR ${CMAKE_BINARY_DIR} NAME )
-
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-if( NOT DEFINED PROJECT )
-    string( REGEX MATCH "([^\\.]*)" PROJECT ${BINARY_DIR} )
-endif()
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if( NOT DEFINED INSTALL_PREFIX )
@@ -93,9 +88,7 @@ find_package( Git )
 if( GIT_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/.git )
 
 	include( GIT_Revision )
-	set(REVISION_STRING "GIT_Revision[${GIT_WC_REVISION}]" )
-else()
-    set(REVISION_STRING "Final" )
+	message( "@@ Building decNumber revision ${GIT_WC_REVISION}" )
 endif()
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -103,6 +96,7 @@ endif()
 #
 include( CheckIncludeFile )
 include( CheckHeader )
+check_header( stdbool.h )
 check_header( stdint.h )
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -148,28 +142,39 @@ else()
 endif()
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   generate stdbool.h
+#
+if( NOT HAVE_STDBOOL_H )
+    if( EXISTS ${CMAKE_SOURCE_DIR}/stdbool.h.in )
+	    configure_file( ${CMAKE_SOURCE_DIR}/stdbool.h.in
+    	                ${CMAKE_BINARY_DIR}/stdbool.h )
+    else()
+
+    endif()
+endif()
+
+# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   generate stdint.h
+#
+if( NOT HAVE_STDINT_H )
+    if( EXISTS ${CMAKE_SOURCE_DIR}/stdint.h.in )
+	    configure_file( ${CMAKE_SOURCE_DIR}/stdint.h.in
+    	                ${CMAKE_BINARY_DIR}/stdint.h )
+    else()
+
+    endif()
+endif()
+
+# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   decNumber.pc
 #
-if( WIN32 )
-    if(     EXISTS ${CMAKE_SOURCE_DIR}/decNumber.pc.in.Windows )
-	    configure_file( ${CMAKE_SOURCE_DIR}/decNumber.pc.in.Windows
-    	                ${CMAKE_BINARY_DIR}/decNumber.pc @ONLY )
-        install(    FILES ${CMAKE_BINARY_DIR}/decNumber.pc
-                    DESTINATION lib/pkgconfig )
-    else()
-        message( "++ will not install 'decNumber.pc' " )
-    endif()
-
+if(     EXISTS ${CMAKE_SOURCE_DIR}/decNumber.pc.in )
+	configure_file( ${CMAKE_SOURCE_DIR}/decNumber.pc.in
+    	            ${CMAKE_BINARY_DIR}/decNumber.pc @ONLY )
+    install(    FILES ${CMAKE_BINARY_DIR}/decNumber.pc
+                DESTINATION lib/pkgconfig )
 else()
-    if(     EXISTS ${CMAKE_SOURCE_DIR}/decNumber.pc.in )
-	    configure_file( ${CMAKE_SOURCE_DIR}/decNumber.pc.in
-    	                ${CMAKE_BINARY_DIR}/decNumber.pc @ONLY )
-        install(    FILES ${CMAKE_BINARY_DIR}/decNumber.pc
-                    DESTINATION lib/pkgconfig )
-    else()
-        message( "++ will not install 'decNumber.pc' " )
-    endif()
-
+        message( "@@ will not install 'decNumber.pc' " )
 endif()
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -182,7 +187,6 @@ include_directories(    BEFORE
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   the public headers
-#
 file( GLOB public_headers
         RELATIVE "${CMAKE_SOURCE_DIR}" "include/*.h" )
 
@@ -198,36 +202,48 @@ set(    public_headers
 list( SORT public_headers )
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   generate the <Makefiles>
+#   the sources
 #
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   decNumber
-set(    decNumber_SRCS
-        source/decContext.c
-        source/decDouble.c
-        source/decNumber.c
-        source/decPacked.c
-        source/decQuad.c
-        source/decSingle.c
-        source/decimal128.c
-        source/decimal32.c
-        source/decimal64.c
+set(    _l
+        decContext.c
+        decDouble.c
+        decNumber.c
+        decPacked.c
+        decQuad.c
+        decSingle.c
+        decimal128.c
+        decimal32.c
+        decimal64.c
     )
+list( SORT _l )
+set(    decNumber_SRCS "" )
+foreach( _s IN LISTS _l )
+    list(   APPEND
+            decNumber_SRCS
+            source/${_s} )
+endforeach()
 
+# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   the static library
 add_library( decNumber        STATIC ${decNumber_SRCS} )
 set_target_properties(  decNumber PROPERTIES
+						OUTPUT_NAME decNumber
 						PUBLIC_HEADER "${public_headers}" )
 install( TARGETS decNumber
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include)
 
-
+# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   the shared library
 if( SHARED_LIBRARY )
 add_library( decNumber_shared SHARED ${decNumber_SRCS} )
 set_target_properties(  decNumber_shared PROPERTIES
-						OUTPUT_NAME decNumber )
+						OUTPUT_NAME decNumber
+                        PUBLIC_HEADER "${public_headers}" )
 
 install( TARGETS decNumber_shared
         ARCHIVE DESTINATION lib
