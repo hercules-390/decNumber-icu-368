@@ -1,7 +1,9 @@
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Global settings
 #
-cmake_minimum_required( VERSION 2.8 )
+cmake_minimum_required( 2.8 )
+
+cmake_policy(SET CMP0048 NEW)
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   check for an in-source build
@@ -11,6 +13,8 @@ cmake_minimum_required( VERSION 2.8 )
 #   if You accidentally try an in-source build:
 #   file 'CMakeCache.txt' and directory 'CMakeFiles'
 #
+
+
 set( CMAKE_DISABLE_IN_SOURCE_BUILD ON )
 set( CMAKE_DISABLE_SOURCE_CHANGES  ON )
 
