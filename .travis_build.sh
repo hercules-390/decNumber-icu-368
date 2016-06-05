@@ -1,9 +1,6 @@
 #! /usr/bin/env bash
 if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then exit ; fi
 
-cmake --version
-exit
-
 rm  -rf .travis_build.dir
 mkdir   .travis_build.dir
 cd      .travis_build.dir

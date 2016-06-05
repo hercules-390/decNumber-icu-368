@@ -1,7 +1,7 @@
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Global settings
 #
-cmake_minimum_required( 2.8 )
+cmake_minimum_required( 3.4 )
 
 cmake_policy(SET CMP0048 NEW)
 
@@ -13,7 +13,6 @@ cmake_policy(SET CMP0048 NEW)
 #   if You accidentally try an in-source build:
 #   file 'CMakeCache.txt' and directory 'CMakeFiles'
 #
-
 
 set( CMAKE_DISABLE_IN_SOURCE_BUILD ON )
 set( CMAKE_DISABLE_SOURCE_CHANGES  ON )
@@ -44,11 +43,11 @@ endif()
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #  	install prefix, and build type
 #
-get_filename_component( BINARY_HLQ ${CMAKE_BINARY_DIR} DIRECTORY )
-get_filename_component( BINARY_DIR ${CMAKE_BINARY_DIR} NAME )
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if( NOT DEFINED INSTALL_PREFIX )
+    get_filename_component( BINARY_HLQ ${CMAKE_BINARY_DIR} DIRECTORY )
+    get_filename_component( BINARY_DIR ${CMAKE_BINARY_DIR} NAME )
 	string( REGEX MATCH "([^\\.]*)" INSTALL_PREFIX ${BINARY_DIR} )
 	if(	BINARY_DIR STREQUAL INSTALL_PREFIX )
 		message( FATAL_ERROR "
@@ -61,7 +60,9 @@ set( CMAKE_INSTALL_PREFIX  "${INSTALL_PREFIX}" CACHE PATH "" FORCE )
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if( NOT DEFINED BUILD_TYPE )
-	string( REGEX MATCH "([^.]*\$)" BUILD_TYPE ${BINARY_DIR} )
+    get_filename_component( BINARY_HLQ ${CMAKE_BINARY_DIR} DIRECTORY )
+    get_filename_component( BINARY_DIR ${CMAKE_BINARY_DIR} NAME )
+    string( REGEX MATCH "([^.]*\$)" BUILD_TYPE ${BINARY_DIR} )
 	if(	BINARY_DIR STREQUAL BUILD_TYPE )
 		message( FATAL_ERROR "
 Unable to determine CMAKE_BUILD_TYPE from  ${CMAKE_BINARY_DIR}
