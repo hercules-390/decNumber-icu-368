@@ -253,11 +253,15 @@ set_target_properties(  decNumber_shared PROPERTIES
                         PUBLIC_HEADER "${public_headers}" )
 
 install( TARGETS decNumber_shared
-        ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include)
 endif()
 
+
+install(FILES "ICU-license.html" DESTINATION  . )
+install(FILES "decnumber.pdf"    DESTINATION  . )
+install(FILES "readme.txt"       DESTINATION  . )
+install(FILES "ERRATA"           DESTINATION  . )
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   the cpack installers definitions
