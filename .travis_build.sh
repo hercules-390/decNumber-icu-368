@@ -4,6 +4,7 @@ if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then exit ; fi
 rm  -rf .travis_build.dir
 mkdir   .travis_build.dir
 cd      .travis_build.dir
-cmake   ../ -DINSTALL_PREFIX=$HOME/noinst -DBUILD_TYPE=Release
+cmake   ../ -DCMAKE_INSTALL_PREFIX=$HOME/noinst -DCMAKE_BUILD_TYPE=Release
 make
+cpack
 exit

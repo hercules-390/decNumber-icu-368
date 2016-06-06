@@ -1,10 +1,26 @@
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   Global settings
 #
-cmake_minimum_required( VERSION 3.4 )
-
+cmake_minimum_required( VERSION 3.2 )
 cmake_policy(SET CMP0048 NEW)
 
+#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   the directory with the CMAKE user modules
+if( EXISTS "${CMAKE_SOURCE_DIR}/cmake/modules" )
+    set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules" )
+    include( Vdump )
+    include( Trace )
+else()
+	message( FATAL_ERROR "
+Cmake modules directory not found '${CMAKE_SOURCE_DIR}/cmake/modules'
+" )
+endif()
+
+set( TRAVIS $ENV{TRAVIS} )
+if( TRAVIS )
+    message( "@@ Remote build ( Travis ) " )
+else()
+    message( "@@ Local  build" )
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   check for an in-source build
 #   and make sure the user doesn't play dirty with symlinks
@@ -13,7 +29,6 @@ cmake_policy(SET CMP0048 NEW)
 #   if You accidentally try an in-source build:
 #   file 'CMakeCache.txt' and directory 'CMakeFiles'
 #
-
 set( CMAKE_DISABLE_IN_SOURCE_BUILD ON )
 set( CMAKE_DISABLE_SOURCE_CHANGES  ON )
 
@@ -26,19 +41,6 @@ if( "${SOURCE_DIR}" STREQUAL "${BINARY_DIR}" )
  remove file 'CMakeCache.txt' and directory 'CMakeFiles'
 " )
 endif( )
-
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   the directory with the CMAKE user modules
-#
-if( EXISTS "${CMAKE_SOURCE_DIR}/cmake/modules" )
-    set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules" )
-    include( Vdump )
-    include( Trace )
-else()
-	message( FATAL_ERROR "
-Cmake modules directory not found '${CMAKE_SOURCE_DIR}/cmake/modules'
-" )
-endif()
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #  	install prefix, and build type
@@ -62,7 +64,7 @@ set( CMAKE_INSTALL_PREFIX  "${INSTALL_PREFIX}" CACHE PATH "" FORCE )
 if( NOT DEFINED BUILD_TYPE )
     get_filename_component( BINARY_HLQ ${CMAKE_BINARY_DIR} DIRECTORY )
     get_filename_component( BINARY_DIR ${CMAKE_BINARY_DIR} NAME )
-    string( REGEX MATCH "([^.]*\$)" BUILD_TYPE ${BINARY_DIR} )
+	string( REGEX MATCH "([^.]*\$)" BUILD_TYPE ${BINARY_DIR} )
 	if(	BINARY_DIR STREQUAL BUILD_TYPE )
 		message( FATAL_ERROR "
 Unable to determine CMAKE_BUILD_TYPE from  ${CMAKE_BINARY_DIR}
@@ -80,6 +82,7 @@ Invalid Release/Debug BUILD_TYPE ${BUILD_TYPE}
 endif()
 set( CMAKE_BUILD_TYPE  "${BUILD_TYPE}" CACHE PATH "" FORCE )
 
+endif( TRAVIS )
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   define the project
@@ -93,7 +96,7 @@ find_package( Git )
 if( GIT_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/.git )
 
 	include( GIT_Revision )
-	message( "@@ Building decNumber revision ${GIT_WC_REVISION}" )
+	message( "@@ Building ${PROJECT_NAME} revision ${GIT_WC_REVISION}" )
 endif()
 
 #   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -121,8 +124,8 @@ endif()
 #  	CDEFS
 #
 if( WIN32 )
-    set( CDEFS_DEBUG            "/D HAVE_PLATFORM_H /D DEBUG" )
-    set( CDEFS_RELEASE          "/D HAVE_PLATFORM_H /D NDEBUG" )
+    set( CDEFS_DEBUG            "/D HAVE_PLATFORM_H /D _DEBUG" )
+    set( CDEFS_RELEASE          "/D HAVE_PLATFORM_H /D _NDEBUG" )
 
 else()
     set( CDEFS_DEBUG            "-D HAVE_PLATFORM_H -D DEBUG" )
@@ -173,13 +176,13 @@ endif()
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #   decNumber.pc
 #
-if(     EXISTS ${CMAKE_SOURCE_DIR}/decNumber.pc.in )
-	configure_file( ${CMAKE_SOURCE_DIR}/decNumber.pc.in
-    	            ${CMAKE_BINARY_DIR}/decNumber.pc @ONLY )
-    install(    FILES ${CMAKE_BINARY_DIR}/decNumber.pc
+if(     EXISTS ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in )
+	configure_file( ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in
+    	            ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY )
+    install(    FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc
                 DESTINATION lib/pkgconfig )
 else()
-        message( "@@ will not install 'decNumber.pc' " )
+        message( "@@ will not install '${PROJECT_NAME}.pc' " )
 endif()
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -239,7 +242,6 @@ set_target_properties(  decNumber PROPERTIES
 						PUBLIC_HEADER "${public_headers}" )
 install( TARGETS decNumber
         ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include)
 
 # 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -256,5 +258,24 @@ install( TARGETS decNumber_shared
         PUBLIC_HEADER DESTINATION include)
 endif()
 
+
+# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   the cpack installers definitions
+#
+if( WIN32 )
+    set( CPACK_GENERATOR "ZIP" )
+else()
+    set( CPACK_GENERATOR "TGZ" )
+endif()
+
+set( CPACK_PACKAGE_NAME         "${PROJECT_NAME}" )
+#set( CPACK_PACKAGE_VERSION      "${${PROJECT_NAME}_VERSION}" )
+set( CPACK_PACKAGE_FILE_NAME    "${CPACK_PACKAGE_NAME}" )
+
+# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#   the cpack installers
+#
+include(CPack)
+
 get_filename_component( CURRENT_LIST_FILE "${CMAKE_CURRENT_LIST_FILE}" NAME)
-Vdump( "${CURRENT_LIST_FILE}" "${CMAKE_CURRENT_LIST_LINE}" )
+Vdump( "${CURRENT_LIST_FILE}" "at_exit" )
