@@ -1,6 +1,13 @@
 #if !defined(DECCOMMON)
 #define DECCOMMON
 
+  #if defined(_MSC_VER) /* Windows */
+    /* "conversion from 'type1' to 'type2', possible loss of data"    */
+    #pragma warning( disable : 4244 )
+  #else /* non-Windows */
+    /* (none yet) */
+  #endif
+
 /* ------------------------------------------------------------------ */
 /* decCommon.h -- common code for all three fixed-size types          */
 /* ------------------------------------------------------------------ */
