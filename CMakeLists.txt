@@ -1,285 +1,295 @@
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#------------------------------------------------------------------------------
 #   Global settings
-#
-cmake_minimum_required( VERSION 3.2 )
-cmake_policy(SET CMP0048 NEW)
+#------------------------------------------------------------------------------
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   the directory with the CMAKE user modules
-if( EXISTS "${CMAKE_SOURCE_DIR}/cmake/modules" )
+cmake_minimum_required( VERSION 3.2 )
+
+cmake_policy( SET CMP0048 NEW )
+
+#------------------------------------------------------------------------------
+#   Load some handy CMake modules
+#------------------------------------------------------------------------------
+
+if( NOT EXISTS "${CMAKE_SOURCE_DIR}/cmake/modules" )
+    message( FATAL_ERROR "CMake modules directory not found! ${CMAKE_SOURCE_DIR}/cmake/modules" )
+else()
+
     set( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules" )
+
     include( Vdump )
     include( Trace )
-else()
-	message( FATAL_ERROR "
-Cmake modules directory not found '${CMAKE_SOURCE_DIR}/cmake/modules'
-" )
+
 endif()
+
+#------------------------------------------------------------------------------
+#   Parse the build directory and set needed variables.
+#------------------------------------------------------------------------------
 
 set( TRAVIS $ENV{TRAVIS} )
-if( TRAVIS )
-    message( "@@ Remote build ( Travis ) " )
-else()
-    message( "@@ Local  build" )
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   check for an in-source build
-#   and make sure the user doesn't play dirty with symlinks
-#
-#   You will still have to manually clean up a few files
-#   if You accidentally try an in-source build:
-#   file 'CMakeCache.txt' and directory 'CMakeFiles'
-#
-set( CMAKE_DISABLE_IN_SOURCE_BUILD ON )
-set( CMAKE_DISABLE_SOURCE_CHANGES  ON )
 
-get_filename_component( SOURCE_DIR "${CMAKE_SOURCE_DIR}" REALPATH)
-get_filename_component( BINARY_DIR "${CMAKE_BINARY_DIR}" REALPATH)
+if( NOT TRAVIS )
 
-if( "${SOURCE_DIR}" STREQUAL "${BINARY_DIR}" )
-    message( FATAL_ERROR "
- in-source builds are not allowed;
- remove file 'CMakeCache.txt' and directory 'CMakeFiles'
-" )
-endif( )
+    message( "Local build" )
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#  	install prefix, and build type
-#
+    include( ParseBinaryDir )
+    ParseBinaryDir()
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-if( NOT DEFINED INSTALL_PREFIX )
-    get_filename_component( BINARY_HLQ ${CMAKE_BINARY_DIR} DIRECTORY )
-    get_filename_component( BINARY_DIR ${CMAKE_BINARY_DIR} NAME )
-	string( REGEX MATCH "([^\\.]*)" INSTALL_PREFIX ${BINARY_DIR} )
-	if(	BINARY_DIR STREQUAL INSTALL_PREFIX )
-		message( FATAL_ERROR "
-Unable to determine INSTALL_PREFIX from  ${CMAKE_BINARY_DIR}
-" )
-	endif()
-	set( INSTALL_PREFIX  "${BINARY_HLQ}/${INSTALL_PREFIX}")
-endif()
-set( CMAKE_INSTALL_PREFIX  "${INSTALL_PREFIX}" CACHE PATH "" FORCE )
+else( NOT TRAVIS )
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-if( NOT DEFINED BUILD_TYPE )
-    get_filename_component( BINARY_HLQ ${CMAKE_BINARY_DIR} DIRECTORY )
-    get_filename_component( BINARY_DIR ${CMAKE_BINARY_DIR} NAME )
-	string( REGEX MATCH "([^.]*\$)" BUILD_TYPE ${BINARY_DIR} )
-	if(	BINARY_DIR STREQUAL BUILD_TYPE )
-		message( FATAL_ERROR "
-Unable to determine CMAKE_BUILD_TYPE from  ${CMAKE_BINARY_DIR}
-" )
-	endif()
-endif()
+    message( "Remote build ( Travis )" )
 
-include( CapitalizeWord )
-Capitalize_Word( ${BUILD_TYPE} BUILD_TYPE )
-if( NOT BUILD_TYPE MATCHES "Release" AND
-    NOT BUILD_TYPE MATCHES "Debug" )
-	message( FATAL_ERROR "
-Invalid Release/Debug BUILD_TYPE ${BUILD_TYPE}
-" )
-endif()
-set( CMAKE_BUILD_TYPE  "${BUILD_TYPE}" CACHE PATH "" FORCE )
+endif( NOT TRAVIS )
 
-endif( TRAVIS )
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   define the project
-#
+#------------------------------------------------------------------------------
+#   Define the project
+#------------------------------------------------------------------------------
+
 project( decNumber VERSION 3.6.8 )
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#  	revision information
-#
-find_package( Git )
-if( GIT_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/.git )
+set( PROJECT_DESCRIPTION
+     "ANSI C General Decimal Arithmetic Library"
+     CACHE PATH "Project description" FORCE )
 
-	include( GIT_Revision )
-	message( "@@ Building ${PROJECT_NAME} revision ${GIT_WC_REVISION}" )
+
+#------------------------------------------------------------------------------
+#   Retrieve Git repository revision information
+#------------------------------------------------------------------------------
+
+find_package( Git )
+
+if( GIT_FOUND AND EXISTS ${CMAKE_SOURCE_DIR}/.git )
+    include( GIT_Revision )
+    message( "Building ${CMAKE_PROJECT_NAME} revision ${GIT_WC_REVISION}" )
 endif()
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#  	headers
-#
+
+#------------------------------------------------------------------------------
+#   Construct a list of this project's public headers
+#------------------------------------------------------------------------------
+
+#  PROGRAMMING NOTE: do NOT use GLOB to collect a list of source files from
+#  your source tree because, if no "CMakeLists.txt" file changes when a file
+#  is added or removed from your project, then the previously generated build
+#  system will never know to ask CMake to regenerate itself to reflect the
+#  newly added/removed files(s).
+
+set( PUBLIC_HEADERS
+
+    include/decimal128.h
+    include/decimal32.h
+    include/decimal64.h
+    include/decPacked.h
+    include/decNumber.h
+    include/decContext.h
+    include/decQuad.h
+)
+list( SORT PUBLIC_HEADERS )
+
+
+#------------------------------------------------------------------------------
+#   Construct a list of this project's source files
+#------------------------------------------------------------------------------
+
+#  PROGRAMMING NOTE: do NOT use GLOB to collect a list of source files from
+#  your source tree because, if no "CMakeLists.txt" file changes when a file
+#  is added or removed from your project, then the previously generated build
+#  system will never know to ask CMake to regenerate itself to reflect the
+#  newly added/removed files(s).
+
+set( ${PROJECT_NAME}_SRCS
+
+     source/decContext.c
+     source/decDouble.c
+     source/decNumber.c
+     source/decPacked.c
+     source/decQuad.c
+     source/decSingle.c
+     source/decimal128.c
+     source/decimal32.c
+     source/decimal64.c
+)
+list( SORT ${PROJECT_NAME}_SRCS )
+
+
+#------------------------------------------------------------------------------
+#   Required headers
+#------------------------------------------------------------------------------
+
 include( CheckIncludeFile )
 include( CheckHeader )
-check_header( stdbool.h )
-check_header( stdint.h )
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#  	CFLAGS
-#
+check_header( stdbool.h )       # defines HAVE_STDBOOL_H
+check_header( stdint.h )        # defines HAVE_STDINT_H
+
+
+#------------------------------------------------------------------------------
+#   Always generate the platform.h header
+#------------------------------------------------------------------------------
+
+if( NOT EXISTS ${CMAKE_SOURCE_DIR}/platform.h.in )
+    message( FATAL_ERROR "Unable to find platform.h.in!" )
+else()
+    configure_file( ${CMAKE_SOURCE_DIR}/platform.h.in
+                    ${CMAKE_BINARY_DIR}/platform.h )
+endif()
+
+
+#------------------------------------------------------------------------------
+#   Update the INCLUDE directories search order
+#------------------------------------------------------------------------------
+
+include_directories( BEFORE ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/include )
+
+
+#------------------------------------------------------------------------------
+#   Adjust needed compile flags for this project/package
+#------------------------------------------------------------------------------
+
+if( IS_BIG_ENDIAN )
+  set( PKG_C_FLAGS "${PKG_C_FLAGS} -D DECLITEND=0" )
+else()
+  set( PKG_C_FLAGS "${PKG_C_FLAGS} -D DECLITEND=1" )
+endif()
+set(   PKG_C_FLAGS "${PKG_C_FLAGS} -D DECPRINT=0"  )
+
+set( CMAKE_C_FLAGS_DEBUG          "${CMAKE_C_FLAGS_DEBUG}          ${PKG_C_FLAGS}" )
+set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} ${PKG_C_FLAGS}" )
+
+set( CMAKE_C_FLAGS_DEBUG          "${CMAKE_C_FLAGS_DEBUG}          -D HAVE_PLATFORM_H -D DEBUG" )
+set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -D HAVE_PLATFORM_H" )
+
+
+#------------------------------------------------------------------------------
+#   Set the build architecture      (32 bit or 64- bit)
+#------------------------------------------------------------------------------
+
 if( WIN32 )
-
+  # (the toolchain being used (i.e. vstools.cmd 32/64) defines this on Windows)
 else()
-    set( CMAKE_C_FLAGS_DEBUG    "-g -g3 -ggdb3"
-        CACHE STRING "" FORCE )
-    set( CMAKE_C_FLAGS_RELEASE  "-g -O2"
-        CACHE STRING "" FORCE )
-
+  if( BITNESS STREQUAL "32" )
+    set( CMAKE_C_FLAGS_DEBUG          "${CMAKE_C_FLAGS_DEBUG}          -m32 -fPIC" )
+    set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -m32 -fPIC" )
+  else()
+    set( CMAKE_C_FLAGS_DEBUG          "${CMAKE_C_FLAGS_DEBUG}          -m64 -fPIC" )
+    set( CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -m64 -fPIC" )
+  endif()
 endif()
 
-#   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#  	CDEFS
-#
-if( WIN32 )
-    set( CDEFS_DEBUG            "/D HAVE_PLATFORM_H /D _DEBUG" )
-    set( CDEFS_RELEASE          "/D HAVE_PLATFORM_H /D _NDEBUG" )
+trace( CMAKE_C_FLAGS_DEBUG )
+trace( CMAKE_C_FLAGS_RELWITHDEBINFO )
 
-else()
-    set( CDEFS_DEBUG            "-D HAVE_PLATFORM_H -D DEBUG" )
-    set( CDEFS_RELEASE          "-D HAVE_PLATFORM_H -D NDEBUG" )
 
-endif()
+#------------------------------------------------------------------------------
+#   Define the package's build and install targets
+#------------------------------------------------------------------------------
 
-set( CMAKE_C_FLAGS_DEBUG    "${CMAKE_C_FLAGS_DEBUG}   ${CDEFS_DEBUG}" )
-set( CMAKE_C_FLAGS_RELEASE  "${CMAKE_C_FLAGS_RELEASE} ${CDEFS_RELEASE}" )
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   generate platform.h
-#
-if( EXISTS ${CMAKE_SOURCE_DIR}/platform.h.in.${CMAKE_SYSTEM_NAME} )
-	configure_file( ${CMAKE_SOURCE_DIR}/platform.h.in.${CMAKE_SYSTEM_NAME}
-    	            ${CMAKE_BINARY_DIR}/platform.h )
-elseif( EXISTS ${CMAKE_SOURCE_DIR}/platform.h.in )
-	configure_file( ${CMAKE_SOURCE_DIR}/platform.h.in
-    	            ${CMAKE_BINARY_DIR}/platform.h )
-else()
-	message( FATAL_ERROR "** Unable to find platform.h.in" )
-endif()
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   generate stdbool.h
-#
-if( NOT HAVE_STDBOOL_H )
-    if( EXISTS ${CMAKE_SOURCE_DIR}/stdbool.h.in )
-	    configure_file( ${CMAKE_SOURCE_DIR}/stdbool.h.in
-    	                ${CMAKE_BINARY_DIR}/stdbool.h )
-    else()
-
-    endif()
-endif()
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   generate stdint.h
-#
-if( NOT HAVE_STDINT_H )
-    if( EXISTS ${CMAKE_SOURCE_DIR}/stdint.h.in )
-	    configure_file( ${CMAKE_SOURCE_DIR}/stdint.h.in
-    	                ${CMAKE_BINARY_DIR}/stdint.h )
-    else()
-
-    endif()
-endif()
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   decNumber.pc
-#
-if(     EXISTS ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in )
-	configure_file( ${CMAKE_SOURCE_DIR}/${PROJECT_NAME}.pc.in
-    	            ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc @ONLY )
-    install(    FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc
-                DESTINATION lib/pkgconfig )
-else()
-        message( "@@ will not install '${PROJECT_NAME}.pc' " )
-endif()
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   include directories
-#
-include_directories(    BEFORE
-                    ${CMAKE_BINARY_DIR}
-                    ${CMAKE_SOURCE_DIR}/include
-                    )
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   the public headers
-file( GLOB public_headers
-        RELATIVE "${CMAKE_SOURCE_DIR}" "include/*.h" )
-
-set(    public_headers
-        include/decimal128.h
-        include/decimal32.h
-        include/decimal64.h
-        include/decPacked.h
-        include/decNumber.h
-        include/decContext.h
-        include/decQuad.h
-        )
-list( SORT public_headers )
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   the sources
-#
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   decNumber
-set(    _l
-        decContext.c
-        decDouble.c
-        decNumber.c
-        decPacked.c
-        decQuad.c
-        decSingle.c
-        decimal128.c
-        decimal32.c
-        decimal64.c
-    )
-list( SORT _l )
-set(    decNumber_SRCS "" )
-foreach( _s IN LISTS _l )
-    list(   APPEND
-            decNumber_SRCS
-            source/${_s} )
-endforeach()
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   the static library
-add_library( decNumber        STATIC ${decNumber_SRCS} )
-set_target_properties(  decNumber PROPERTIES
-						OUTPUT_NAME decNumber
-						PUBLIC_HEADER "${public_headers}" )
-install( TARGETS decNumber
-        ARCHIVE DESTINATION lib
-        PUBLIC_HEADER DESTINATION include)
-
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   the shared library
 if( SHARED_LIBRARY )
-add_library( decNumber_shared SHARED ${decNumber_SRCS} )
-set_target_properties(  decNumber_shared PROPERTIES
-						OUTPUT_NAME decNumber
-                        PUBLIC_HEADER "${public_headers}" )
 
-install( TARGETS decNumber_shared
-        LIBRARY DESTINATION lib
-        PUBLIC_HEADER DESTINATION include)
+    add_library( ${FULLNAME}  SHARED  ${${PROJECT_NAME}_SRCS} )
+
+    set_target_properties( ${FULLNAME} PROPERTIES
+                           PUBLIC_HEADER        "${PUBLIC_HEADERS}"
+                           OUTPUT_NAME           ${FULLNAME}
+                           PDB_NAME              ${FULLNAME} )
+
+    install( TARGETS ${FULLNAME}
+             PUBLIC_HEADER DESTINATION include
+             LIBRARY       DESTINATION lib )
+
+else()
+
+    add_library( ${FULLNAME}  STATIC  ${${PROJECT_NAME}_SRCS} )
+
+    set_target_properties( ${FULLNAME} PROPERTIES
+                           PUBLIC_HEADER                "${PUBLIC_HEADERS}"
+                           OUTPUT_NAME                   ${FULLNAME}
+                           COMPILE_PDB_NAME              ${FULLNAME} )
+
+    install( TARGETS ${FULLNAME}
+             PUBLIC_HEADER DESTINATION include
+             ARCHIVE       DESTINATION lib )
+
 endif()
 
 
-install(FILES "ICU-license.html" DESTINATION  . )
-install(FILES "decnumber.pdf"    DESTINATION  . )
-install(FILES "readme.txt"       DESTINATION  . )
-install(FILES "ERRATA"           DESTINATION  . )
+#------------------------------------------------------------------------------
+#   Define additional files to be installed
+#------------------------------------------------------------------------------
 
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   the cpack installers definitions
-#
+install( FILES "ICU-license.html" DESTINATION . )
+install( FILES "decnumber.pdf"    DESTINATION . )
+install( FILES "readme.txt"       DESTINATION . )
+install( FILES "ERRATA"           DESTINATION . )
+if( WIN32 )
+install( FILES "${CMAKE_BINARY_DIR}/${FULLNAME}.pdb" DESTINATION lib )
+endif()
+
+
+#------------------------------------------------------------------------------
+#   Generate the .pc package configuration file
+#------------------------------------------------------------------------------
+
+if( NOT EXISTS ${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.pc.in )
+    message( AUTHOR_WARNING "Will not install ${CMAKE_PROJECT_NAME}.pc" )
+else()
+
+    set( PACKAGE_NAME        "${FULLNAME}" )
+    set( PACKAGE_DESCRIPTION "${PROJECT_DESCRIPTION} (${BITNESS}-bit ${CONFIG})" )
+    set( PACKAGE_VERSION     "${PROJECT_VERSION}"  )
+
+    configure_file( ${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.pc.in
+                    ${CMAKE_BINARY_DIR}/${FULLNAME}.pc @ONLY )
+
+    install( FILES  ${CMAKE_BINARY_DIR}/${FULLNAME}.pc
+                     DESTINATION lib/pkgconfig )
+endif()
+
+
+#------------------------------------------------------------------------------
+#   The CPack installers
+#------------------------------------------------------------------------------
+
+if( SHARED_LIBRARY )
+    include( InstallRequiredSystemLibraries )
+endif()
+
+set( CPACK_PACKAGE_NAME                "${CMAKE_PROJECT_NAME}"  )
+set( CPACK_PACKAGE_DESCRIPTION_SUMMARY "${PROJECT_DESCRIPTION}" )
+set( CPACK_PACKAGE_VERSION_MAJOR       "${CMAKE_VERSION_MAJOR}" )
+set( CPACK_PACKAGE_VERSION_MINOR       "${CMAKE_VERSION_MINOR}" )
+set( CPACK_PACKAGE_VERSION_PATCH       "${CMAKE_VERSION_PATCH}" )
+set( CPACK_PACKAGE_DESCRIPTION_FILE    "${CMAKE_CURRENT_SOURCE_DIR}/readme.txt" )
+set( CPACK_RESOURCE_FILE_LICENSE       "${CMAKE_CURRENT_SOURCE_DIR}/ICU-license.html" )
+
 if( WIN32 )
     set( CPACK_GENERATOR "ZIP" )
 else()
     set( CPACK_GENERATOR "TGZ" )
 endif()
 
-set( CPACK_PACKAGE_NAME         "${PROJECT_NAME}" )
-#set( CPACK_PACKAGE_VERSION      "${${PROJECT_NAME}_VERSION}" )
-set( CPACK_PACKAGE_FILE_NAME    "${CPACK_PACKAGE_NAME}" )
+include( CPack )
 
-# 	- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#   the cpack installers
-#
-include(CPack)
 
-get_filename_component( CURRENT_LIST_FILE "${CMAKE_CURRENT_LIST_FILE}" NAME)
-Vdump( "${CURRENT_LIST_FILE}" "at_exit" )
+#------------------------------------------------------------------------------
+#   Create an uninstall target
+#------------------------------------------------------------------------------
+
+#  First, create the cmake script that will do the actual uninstall.
+
+configure_file( "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+                "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake" @ONLY )
+
+#  Now simply define an uninstall target that will run the above script.
+
+add_custom_target( uninstall
+                   COMMAND ${CMAKE_COMMAND} -P
+                   "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake" )
+
+
+#------------------------------------------------------------------------------
+#   CMake debugging: dump variables at exit
+#------------------------------------------------------------------------------
+
+get_filename_component( CURRENT_LIST_FILE "${CMAKE_CURRENT_LIST_FILE}" NAME )
+vdump( "${CURRENT_LIST_FILE}" "exit" )
