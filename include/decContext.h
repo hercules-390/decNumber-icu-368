@@ -43,11 +43,31 @@
 
   #ifdef HAVE_PLATFORM_H
     #include "platform.h"
+  #else
+    #ifdef HAVE_STDBOOL_H
+      #include <stdbool.h>
+    #else
+      /* minimum stdbool.h #defines needed by decNumber */ 
+      #define bool    _Bool
+      #define false   0
+      #define true    1
+      #define __bool_true_false_are_defined   1
+    #endif
+    #ifdef HAVE_STDINT_H
+      #include <stdint.h>
+    #else
+      /* minimum stdint.h typedefs needed by decNumber */ 
+      typedef unsigned char  uint8_t; 
+      typedef          char   int8_t; 
+      typedef unsigned short uint16_t; 
+      typedef          short  int16_t; 
+      typedef unsigned int   uint32_t; 
+      typedef          int    int32_t; 
+      typedef unsigned long long uint64_t; 
+      typedef          long long int64_t; 
+    #endif
   #endif
 
-  #if !defined(int32_t)
-    #include <stdint.h>            /* C99 standard integers           */
-  #endif
   #include <stdio.h>               /* for printf, etc.                */
   #include <signal.h>              /* for traps                       */
 
