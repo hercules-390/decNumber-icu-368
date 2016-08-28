@@ -1,10 +1,67 @@
+/*-------------------------------------------------------------------*/
+/*  platform.h  --  primary build header. Should be first #include.  */
+/*-------------------------------------------------------------------*/
+
 #ifndef IN_PLATFORM_H
 #define IN_PLATFORM_H
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-*/
-#cmakedefine HAVE_STDBOOL_H
-#cmakedefine HAVE_STDINT_H
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-*/
+/*-------------------------------------------------------------------*/
+/*  Include primary system headers according to build platform.      */
+/*-------------------------------------------------------------------*/
+
+#ifdef _MSC_VER                         /* Microsoft Visual C/C++    */
+
+  #define _CRT_SECURE_NO_WARNINGS       /* We know what we're doing! */
+
+  #define _WIN32_WINNT      0x0600      /* Windows Vista/Server 2008 */
+  #define WINVER            0x0600      /* Windows Vista/Server 2008 */
+  #define NTDDI_VERSION     0x06000100  /* Vista SP1 / Server 2008   */
+  #define _WIN32_IE         0x0900      /* Internet Explorer 9.0     */
+
+  /* Need <SDKDDKVer.h> header with later versions of Visual Studio. */
+
+  #if _MSC_VER >= 1600                  /* If VS2010 or greater,     */
+    #include <SDKDDKVer.h>              /* then need this header     */
+  #endif
+
+  #include <windows.h>                  /* Primary Windows header    */
+
+  /* Other system includes would go here...                          */
+
+#else /* non-Windows                                                 */
+
+  /* Other system includes would go here...                          */
+
+#endif /* Windows or not                                             */
+
+/*-------------------------------------------------------------------*/
+/*  Use fallback if system headers not found.                        */
+/*-------------------------------------------------------------------*/
+
+#cmakedefine HAVE_STDBOOL_H             /* (determined by CMake)     */
+#cmakedefine HAVE_STDINT_H              /* (determined by CMake)     */
+
+#ifdef HAVE_STDBOOL_H
+  #include <stdbool.h>
+#else
+  /* minimum stdbool.h #defines needed by decNumber */ 
+  #define bool    _Bool
+  #define false   0
+  #define true    1
+  #define __bool_true_false_are_defined   1
+#endif
+#ifdef HAVE_STDINT_H
+  #include <stdint.h>
+#else
+  /* minimum stdint.h typedefs needed by decNumber */ 
+  typedef unsigned char  uint8_t; 
+  typedef          char   int8_t; 
+  typedef unsigned short uint16_t; 
+  typedef          short  int16_t; 
+  typedef unsigned int   uint32_t; 
+  typedef          int    int32_t; 
+  typedef unsigned long long uint64_t; 
+  typedef          long long int64_t; 
+#endif
+
 #endif /* #ifndef IN_PLATFORM_H */
